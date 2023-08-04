@@ -1,0 +1,100 @@
+---
+name: bump version
+on:
+  workflow_call: {}
+  repository_dispatch:
+    types: [bump-version-command]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+env:
+  BOT_EMAIL: cloudorchestrator+github-bot@sap.com
+  # Common versions
+  # renovate: datasource=github-tags depName=golangci/golangci-lint
+  GOLANGCI_VERSION: 'v1.53.3'
+  # renovate: datasource=go depName=golang.org/x/tools/cmd/goimports
+  GO_IMPORT_VERSION: 'v0.1.12'
+  DOCKER_BUILDX_VERSION: 'v0.8.2'
+  GOPRIVATE: "github.tools.sap/*"
+
+jobs:
+  generate:
+    runs-on: [self-hosted]
+    container:
+      image: golang:1.20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          fetch-depth: 0
+          ref: ${{ github.event.client_payload.pull_request.head.ref }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+
+      - name: Install tools
+        run: |
+          apt-get update
+          apt-get install zip -y
+      - name: Configure git
+        run: |
+          git config --global --add safe.directory "$(pwd)"
+          git config --global url.https://${{ secrets.REPOSITORY_SETTINGS_TOKEN }}@github.tools.sap/.insteadOf https://github.tools.sap/
+      - name: Setup Go
+        uses: actions/setup-go@v4
+
+      - name: Install goimports
+        run: |
+          cd /tmp
+          go install golang.org/x/tools/cmd/goimports@${{ env.GO_IMPORT_VERSION }}
+      - name: Find the Go Build Cache
+        id: go
+        run: echo "::set-output name=cache::$(make go.cachedir)"
+
+      - name: Cache the Go Build Cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.go.outputs.cache }}
+          key: ${{ runner.os }}-build-check-diff-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-build-check-diff-
+      - name: Install bumper utils
+        run: |
+          go install github.com/sdischer-sap/bump_version@1.0.0        
+      - name: bump version 
+        run: |
+          echo $(bump_version patch) > VERSION
+      - name: Count Changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          NUMCHANGES=$(git status -s | wc -l || exit 1)
+          echo "changes=$NUMCHANGES" >> $GITHUB_ENV
+      - name: Commit & push
+        if: "${{ env.changes != '0' }}"
+        run: |
+          git config --global user.email "${{ env.BOT_EMAIL }}"
+          git commit -m "${{ github.event.client_payload.slash_command.command }} for ${{ github.event.client_payload.github.payload.comment.user.login }}. See ${{ github.event.client_payload.github.payload.comment.html_url }}"
+          git push
+      - name: Update comment (success)
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
+          body: |
+            >successfully ran /${{ github.event.client_payload.slash_command.command }}
+            >changes: ${{ env.changes }}
+            >${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          reactions: hooray
+          reactions-edit-mode: replace
+
+      - name: Update comment (fail)
+        if: failure()
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
+          body: |
+            >failed to run /${{ github.event.client_payload.slash_command.command }}
+            >${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          reactions: confused
+          reactions-edit-mode: replace
