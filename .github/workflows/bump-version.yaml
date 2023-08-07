@@ -39,8 +39,10 @@ jobs:
           versiontype=${{ github.event.client_payload.slash_command.args.named.versiontype }}
           if [[ -z "$versiontype" ]]; then versiontype="patch"; fi
           fromversion=$(cat VERSION)
-          toversion=$(echo $(bump_version ${{ steps.vars.outputs.versiontype }}))
-      
+          toversion=$(echo $(bump_version $versiontype))
+          echo "versiontype=$versiontype" >> "$GITHUB_ENV"
+          echo "fromversion=$fromversion" >> "$GITHUB_ENV"      
+          echo "toversion=$toversion" >> "$GITHUB_ENV"
       - name: Install tools
         run: |
           apt-get update
