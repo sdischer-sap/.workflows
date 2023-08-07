@@ -26,6 +26,12 @@ jobs:
     container:
       image: golang:1.20
     steps:
+      - name: Vars for version bumping
+        id: vars
+        run: |
+          versiontype=${{ github.event.client_payload.slash_command.args.named.versiontype }}
+          if [[ -z "$versiontype" ]]; then versiontype="patch"; fi
+          echo "versiontype=$versiontype" >> $GITHUB_OUTPUT
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -64,7 +70,7 @@ jobs:
           go install github.com/sdischer-sap/bump_version@1.0.0        
       - name: bump version 
         run: |
-          echo $(bump_version patch) > VERSION
+          echo $(bump_version ${{ steps.vars.outputs.versiontype }}) > VERSION
       - name: Count Changes
         shell: bash
         run: |
