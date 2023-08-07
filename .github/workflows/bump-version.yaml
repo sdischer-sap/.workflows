@@ -38,11 +38,9 @@ jobs:
         run: |
           versiontype=${{ github.event.client_payload.slash_command.args.named.versiontype }}
           if [[ -z "$versiontype" ]]; then versiontype="patch"; fi
-          fromversion=$(cat VERSION)
-          toversion=$(echo $(bump_version $versiontype))
+          fromversion=$(cat VERSION)        
           echo "versiontype=$versiontype" >> "$GITHUB_ENV"
-          echo "fromversion=$fromversion" >> "$GITHUB_ENV"      
-          echo "toversion=$toversion" >> "$GITHUB_ENV"
+          echo "fromversion=$fromversion" >> "$GITHUB_ENV"            
       - name: Install tools
         run: |
           apt-get update
@@ -73,7 +71,9 @@ jobs:
           go install github.com/sdischer-sap/bump_version@1.0.0        
       - name: bump version 
         run: |
-          echo $(env.toversion) > VERSION
+          toversion=$(echo $(bump_version ${env.versiontype}))
+          echo "toversion=$toversion" >> "$GITHUB_ENV"
+          echo $toversion > VERSION
       - name: Count Changes
         shell: bash
         run: |
@@ -93,7 +93,7 @@ jobs:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           body: |
             >successfully ran /${{ github.event.client_payload.slash_command.command }}
-            >updated version from $(env.fromversion) to $env.toversion) 
+            >updated version from ${env.fromversion} to ${env.toversion} 
             >${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           reactions: hooray
           reactions-edit-mode: replace
