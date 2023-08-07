@@ -6,7 +6,7 @@ on:
     types: [created, edited]
 jobs:
   slashCommandDispatch:
-    runs-on: ubunutu
+    runs-on: ubuntu-latest
     steps:
       - name: Slash Command Dispatch
         uses: peter-evans/slash-command-dispatch@v3
