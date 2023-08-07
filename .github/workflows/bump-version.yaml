@@ -75,6 +75,7 @@ jobs:
         if: "${{ env.changes != '0' }}"
         run: |
           git config --global user.email "${{ env.BOT_EMAIL }}"
+          git add VERSION
           git commit -m "${{ github.event.client_payload.slash_command.command }} for ${{ github.event.client_payload.github.payload.comment.user.login }}. See ${{ github.event.client_payload.github.payload.comment.html_url }}"
           git push
       - name: Update comment (success)
