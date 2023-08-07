@@ -22,7 +22,7 @@ env:
 
 jobs:
   generate:
-    runs-on: [self-hosted]
+    runs-on: ubuntu
     container:
       image: golang:1.20
     steps:
