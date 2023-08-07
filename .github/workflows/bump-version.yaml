@@ -31,7 +31,8 @@ jobs:
         run: |
           versiontype=${{ github.event.client_payload.slash_command.args.named.versiontype }}
           if [[ -z "$versiontype" ]]; then versiontype="patch"; fi
-          echo "versiontype=$versiontype" >> $GITHUB_OUTPUT
+          fromversion=$(cat VERSION)
+          toversion=$(echo $(bump_version ${{ steps.vars.outputs.versiontype }}))
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -70,7 +71,7 @@ jobs:
           go install github.com/sdischer-sap/bump_version@1.0.0        
       - name: bump version 
         run: |
-          echo $(bump_version ${{ steps.vars.outputs.versiontype }}) > VERSION
+          echo ${{ steps.vars.outputs.toversion }} > VERSION
       - name: Count Changes
         shell: bash
         run: |
@@ -90,7 +91,7 @@ jobs:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           body: |
             >successfully ran /${{ github.event.client_payload.slash_command.command }}
-            >changes: ${{ env.changes }}
+            >updated version from ${{ steps.vars.outputs.fromversion }} to ${{ steps.vars.outputs.toversion }}
             >${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           reactions: hooray
           reactions-edit-mode: replace
