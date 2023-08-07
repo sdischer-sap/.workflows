@@ -73,7 +73,7 @@ jobs:
           go install github.com/sdischer-sap/bump_version@1.0.0        
       - name: bump version 
         run: |
-          echo $env.toversion > VERSION
+          echo $(env.toversion) > VERSION
       - name: Count Changes
         shell: bash
         run: |
@@ -93,7 +93,7 @@ jobs:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           body: |
             >successfully ran /${{ github.event.client_payload.slash_command.command }}
-            >updated version from ${{ steps.vars.outputs.fromversion }} to ${{ steps.vars.outputs.toversion }}
+            >updated version from $(env.fromversion) to $env.toversion) 
             >${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           reactions: hooray
           reactions-edit-mode: replace
