@@ -73,7 +73,7 @@ jobs:
           go install github.com/sdischer-sap/bump_version@1.0.0        
       - name: bump version 
         run: |
-          echo ${{ steps.vars.outputs.toversion }} > VERSION
+          echo $env.toversion > VERSION
       - name: Count Changes
         shell: bash
         run: |
