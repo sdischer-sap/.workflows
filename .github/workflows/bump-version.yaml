@@ -41,10 +41,6 @@ jobs:
           fromversion=$(cat VERSION)        
           echo "versiontype=$versiontype" >> "$GITHUB_ENV"
           echo "fromversion=$fromversion" >> "$GITHUB_ENV"            
-      - name: Install tools
-        run: |
-          apt-get update
-          apt-get install zip -y
       - name: Configure git
         run: |
           git config --global --add safe.directory "$(pwd)"
@@ -52,10 +48,6 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
 
-      - name: Install goimports
-        run: |
-          cd /tmp
-          go install golang.org/x/tools/cmd/goimports@${{ env.GO_IMPORT_VERSION }}
       - name: Find the Go Build Cache
         id: go
         run: echo "::set-output name=cache::$(go env GOCACHE)"
@@ -68,7 +60,7 @@ jobs:
           restore-keys: ${{ runner.os }}-build-check-diff-
       - name: Install bumper utils
         run: |
-          go install github.com/sdischer-sap/bump_version@1.0.0        
+          go install github.tools.sap/cloud-orchestration/bump_version@1.0.0
       - name: bump version 
         run: |
           toversion=$(echo $(bump_version ${{ env.versiontype }}))
