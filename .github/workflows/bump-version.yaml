@@ -12,6 +12,7 @@ permissions:
 
 env:
   BOT_EMAIL: cloudorchestrator+github-bot@sap.com
+  BOT_NAME: co-actions[bot]
   # Common versions
   # renovate: datasource=github-tags depName=golangci/golangci-lint
   GOLANGCI_VERSION: 'v1.53.3'
@@ -45,6 +46,8 @@ jobs:
         run: |
           git config --global --add safe.directory "$(pwd)"
           git config --global url.https://${{ secrets.REPOSITORY_SETTINGS_TOKEN }}@github.tools.sap/.insteadOf https://github.tools.sap/
+          git config --global user.email "${{ env.BOT_EMAIL }}"
+          git config --global user.name "${{ env.BOT_NAME }}"
       - name: Setup Go
         uses: actions/setup-go@v4
 
